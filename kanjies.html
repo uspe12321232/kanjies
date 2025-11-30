@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>漢字テスト</title>
+
+  <!-- ★ LaTeX を表示するための MathJax 読み込み ★ -->
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #f2ffcb, #a5f5ff);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 32px;
+    }
+
+    #counter {
+      font-size: 16px;
+      color: #555;
+      margin-bottom: 10px;
+    }
+
+    #card-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      padding: 40px;
+      width: 400px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    #card {
+      font-size: 24px;
+      color: #444;
+      margin-bottom: 20px;
+    }
+
+    #answer {
+      font-size: 40px;
+      color: #00796b;
+      margin-top: 10px;
+      opacity: 0;
+    }
+
+    #answer.visible {
+      opacity: 1;
+    }
+
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .controls button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      background-color: #00796b;
+      color: white;
+      cursor: pointer;
+    }
+
+    .controls button:hover {
+      background-color: #004d40;
+    }
+
+    .hint {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>漢字テスト7回目</h1>
+  <div id="counter">読み込み中...</div>
+  <div id="card-container" onclick="toggleAnswer()">
+    <div id="card">...</div>
+    <div id="answer"></div>
+  </div>
+  <div class="controls">
+    <button onclick="previousCard()">← 前へ</button>
+    <button onclick="randomCard()">🎲</button>
+    <button onclick="nextCard()">次へ →</button>
+  </div>
+  <div class="hint">←前｜→次｜↓↑答え｜クリックで表示／非表示｜🎲ランダム出題</div>
+
+  <script src="kanji5.js"></script>
+
+  <script>
+    let currentIndex = 0;
+    let answerVisible = false;
+    let hideTimeout = null;
+
+    function renderMath() {
+      if (window.MathJax) {
+        MathJax.typesetPromise();
+      }
+    }
+
+    function showCard() {
+      document.getElementById("card").innerHTML = flashcards[currentIndex].question;
+      document.getElementById("answer").innerHTML = flashcards[currentIndex].answer;
+
+      answerVisible = false;
+      updateAnswerVisibility();
+
+      document.getElementById("counter").innerText =
+        `${currentIndex + 1}問目／全${flashcards.length}問`;
+
+      renderMath();
+    }
+
+    function updateAnswerVisibility() {
+      const answerEl = document.getElementById("answer");
+      if (answerVisible) {
+        answerEl.classList.add("visible");
+      } else {
+        answerEl.classList.remove("visible");
+      }
+      renderMath();
+    }
+
+    function toggleAnswer() {
+      answerVisible = !answerVisible;
+      updateAnswerVisibility();
+
+      if (answerVisible) {
+        hideTimeout = setTimeout(() => {
+          answerVisible = false;
+          updateAnswerVisibility();
+        }, 5500);
+      } else {
+        clearTimeout(hideTimeout);
+        hideTimeout = null;
+      }
+    }
+
+    function hideAnswerImmediately() {
+      clearTimeout(hideTimeout);
+      hideTimeout = null;
+      answerVisible = false;
+      updateAnswerVisibility();
+    }
+
+    function nextCard() {
+      hideAnswerImmediately();
+      currentIndex = (currentIndex + 1) % flashcards.length;
+      showCard();
+    }
+
+    function previousCard() {
+      hideAnswerImmediately();
+      currentIndex = (currentIndex - 1 + flashcards.length) % flashcards.length;
+      showCard();
+    }
+
+    function randomCard() {
+      hideAnswerImmediately();
+      let newIndex;
+      do {
+        newIndex = Math.floor(Math.random() * flashcards.length);
+      } while (newIndex === currentIndex && flashcards.length > 1);
+      currentIndex = newIndex;
+      showCard();
+    }
+
+    document.addEventListener("keydown", function(event) {
+      if (event.key === "ArrowRight") nextCard();
+      else if (event.key === "ArrowLeft") previousCard();
+      else if (event.key === "ArrowDown" || event.key === "ArrowUp") toggleAnswer();
+    });
+
+    window.onload = showCard;
+  </script>
+</body>
+</html>
