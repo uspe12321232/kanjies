@@ -52,6 +52,7 @@
       color: #00796b;
       margin-top: 10px;
       opacity: 0;
+      transition: opacity .2s;
     }
 
     #answer.visible {
@@ -90,16 +91,19 @@
 <body>
   <h1>漢字テスト7回目</h1>
   <div id="counter">読み込み中...</div>
+
   <div id="card-container" onclick="toggleAnswer()">
     <div id="card">...</div>
     <div id="answer"></div>
   </div>
+
   <div class="controls">
     <button onclick="previousCard()">← 前へ</button>
     <button onclick="randomCard()">🎲</button>
     <button onclick="nextCard()">次へ →</button>
   </div>
-  <div class="hint">←前｜→次｜↓↑答え｜クリックで表示／非表示｜🎲ランダム出題</div>
+
+  <div class="hint">←前｜→次｜↓↑答え｜WASD対応｜クリックで表示｜🎲ランダム</div>
 
   <script src="kanji5.js"></script>
 
@@ -181,10 +185,17 @@
       showCard();
     }
 
+    /* ★★★★★ WASD 追加 ★★★★★ */
     document.addEventListener("keydown", function(event) {
-      if (event.key === "ArrowRight") nextCard();
-      else if (event.key === "ArrowLeft") previousCard();
-      else if (event.key === "ArrowDown" || event.key === "ArrowUp") toggleAnswer();
+      const key = event.key.toLowerCase();
+
+      if (event.key === "ArrowRight" || key === "d") {
+        nextCard();
+      } else if (event.key === "ArrowLeft" || key === "a") {
+        previousCard();
+      } else if (event.key === "ArrowDown" || event.key === "ArrowUp" || key === "s" || key === "w") {
+        toggleAnswer();
+      }
     });
 
     window.onload = showCard;
