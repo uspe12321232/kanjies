@@ -25,7 +25,7 @@ const flashcards = [
   { question: "反発する力を<strong>せきりょく</strong>という。", answer: "斥力" },
   { question: "船が<strong>いっせき</strong>だけ見える。", answer: "一隻" },
   { question: "大会で<strong>せきはい</strong>する。", answer: "惜敗" },
-  { question: "こせき<strong>とうほん</strong>を取り寄せる。", answer: "戸籍謄本" },
+  { question: "<strong>こせき</strong>謄本を取り寄せる。", answer: "戸籍" },
   { question: "<strong>しこうさくご</strong>", answer: "試行錯誤" },
   { question: "<strong>こりつむえん</strong>", answer: "孤立無援" },
   { question: "<strong>だいじだいひ</strong>", answer: "大慈大悲" },
