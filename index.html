@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>国語 小テスト完全版 - フラッシュカード</title>
+<title>国語 小テスト対策 - フラッシュカード</title>
 <style>
 :root{
   --primary:#4a90e2;
@@ -31,8 +31,6 @@ header{
   margin:15px;
   display:flex;
   gap:10px;
-  flex-wrap:wrap;
-  justify-content:center;
 }
 select,button{
   padding:10px 15px;
@@ -78,8 +76,8 @@ select,button{
   background:#eef5ff;
 }
 .question{font-size:1.2rem;font-weight:bold}
-.answer{font-size:1.5rem;color:var(--primary);font-weight:bold}
-.hint{font-size:.9rem;color:#666;margin-top:10px;text-align:center}
+.answer{font-size:1.6rem;color:var(--primary);font-weight:bold}
+.hint{font-size:.9rem;color:#666;margin-top:10px}
 
 /* ブックマーク */
 .btn-star{
@@ -109,33 +107,27 @@ select,button{
   color:white;
   font-size:20px;
 }
-
-/* スワイプ用 */
-.touch-area{
-  width:100%;
-  height:100%;
-  position:absolute;
-  top:0;left:0;
-}
 </style>
 </head>
-<body>
 
-<header><h3>国語 小テスト 完全版</h3></header>
+<body>
+<header><h3>国語 小テスト 対策</h3></header>
 
 <div class="controls">
-<select id="modeSelect">
+<select id="modeSelect" onchange="initApp()">
   <option value="yoji">四字熟語</option>
   <option value="reading">漢字の読み</option>
   <option value="kanji">漢字の書き</option>
 </select>
-<button id="filterBtn">ブックマークのみを表示</button>
+<button onclick="toggleOnlyBookmarked()">
+  <span id="filterBtnText">ブックマークのみを表示</span>
+</button>
 </div>
 
 <div class="counter" id="counter"></div>
 
-<div class="card-container">
-<button class="btn-star" id="starBtn">★</button>
+<div class="card-container" onclick="flipCard()">
+<button class="btn-star" id="starBtn" onclick="toggleBookmark(event)">★</button>
 <div class="card" id="card">
   <div class="card-face">
     <div class="question" id="qText"></div>
@@ -145,100 +137,168 @@ select,button{
     <div class="answer" id="aText"></div>
   </div>
 </div>
-<div class="touch-area" id="touchArea"></div>
 </div>
 
 <div class="nav-buttons">
-<button class="btn-nav" id="prevBtn">←</button>
-<button class="btn-nav" id="nextBtn">→</button>
+<button class="btn-nav" onclick="prevCard(event)">←</button>
+<button class="btn-nav" onclick="nextCard(event)">→</button>
 </div>
 
 <script>
-/* ===== 問題データ ===== */
-const data={
-yoji:[
-{q:"一□□千",a:"一騎当千"},{q:"□怒哀□",a:"喜怒哀楽"},{q:"□□実実",a:"虚虚実実"},
-{q:"平穏□□",a:"平穏無事"},{q:"□和□同",a:"付和雷同"},{q:"一□打□",a:"一網打尽"},
-{q:"小心□□",a:"小心翼翼"},{q:"□□割拠",a:"群雄割拠"},{q:"愛□□苦",a:"愛別離苦"},
-{q:"□幻自□",a:"変幻自在"},{q:"□己□礼",a:"克己復礼"},{q:"巧□令□",a:"巧言令色"},
-{q:"□慈□悲",a:"大慈大悲"},{q:"不□長□",a:"不老長寿"},{q:"□婚□祭",a:"冠婚葬祭"},
-{q:"試□錯□",a:"試行錯誤"},{q:"□殺□奪",a:"生殺与奪"},{q:"温□篤□",a:"温厚篤実"},
-{q:"□□選択",a:"取捨選択"},{q:"大胆□□",a:"大胆不敵"},{q:"鯨□馬□",a:"鯨飲馬食"},
-{q:"□口牛□",a:"鶏口牛後"},{q:"自□自□",a:"自暴自棄"},{q:"勇□果□",a:"勇猛果敢"},
-{q:"佳□薄□",a:"佳人薄命"},{q:"複□怪□",a:"複雑怪奇"},{q:"感□無□",a:"感慨無量"},
-{q:"首□一□",a:"首尾一貫"},{q:"離□集□",a:"離合集散"},{q:"沈□黙□",a:"沈思黙考"},
-{q:"美□麗□",a:"美辞麗句"},{q:"遠□会□",a:"遠慮会釈"},{q:"猪□猛□",a:"猪突猛進"},
-{q:"孤□奮□",a:"孤軍奮闘"},{q:"多□多□",a:"多情多恨"},{q:"一□入□",a:"一球入魂"},
-{q:"孤□無□",a:"孤立無援"},{q:"伸□自□",a:"伸縮自在"},{q:"面□躍□",a:"面目躍如"},
-{q:"意□衝□",a:"意気衝天"},{q:"粒□辛□",a:"粒粒辛苦"},{q:"栄□盛□",a:"栄枯盛衰"},
-{q:"酔□夢□",a:"酔生夢死"},{q:"国□無□",a:"国士無双"},{q:"粗□粗□",a:"粗衣粗食"},
-{q:"換□奪□",a:"換骨奪胎"},{q:"受□告□",a:"受胎告知"},{q:"人□無□",a:"人畜無害"},
-{q:"新□代□",a:"新陳代謝"}
+/* ===== 問題データ（完全版） ===== */
+const data = {
+yoji: [
+{q:"一□□千",a:"一騎当千",h:"一人で千人の敵に対抗できるほど強いこと"},
+{q:"□怒哀□",a:"喜怒哀楽",h:"人間の様々な感情"},
+{q:"□□実実",a:"虚虚実実",h:"互いに策を尽くして戦うこと"},
+{q:"平穏□□",a:"平穏無事",h:"変わったこともなく穏やかなこと"},
+{q:"□和□同",a:"付和雷同",h:"自分の考えがなく他人の意見に同調すること"},
+{q:"一□打□",a:"一網打尽",h:"一度に一味をすべて捕らえること"},
+{q:"小心□□",a:"小心翼翼",h:"気が小さくびくびくしている様子"},
+{q:"□□割拠",a:"群雄割拠",h:"多くの英雄が対立すること"},
+{q:"愛□□苦",a:"愛別離苦",h:"愛する者と別れる苦しみ"},
+{q:"□幻自□",a:"変幻自在",h:"思いのままに変化すること"},
+{q:"□己□礼",a:"克己復礼",h:"私欲を抑え礼に戻ること"},
+{q:"巧□令□",a:"巧言令色",h:"言葉巧みに取り入ること"},
+{q:"□慈□悲",a:"大慈大悲",h:"大きな慈しみ"},
+{q:"不□長□",a:"不老長寿",h:"老いずに長生き"},
+{q:"□婚□祭",a:"冠婚葬祭",h:"人生の重要行事"},
+{q:"試□錯□",a:"試行錯誤",h:"失敗を繰り返すこと"},
+{q:"□殺□奪",a:"生殺与奪",h:"生死を左右すること"},
+{q:"温□篤□",a:"温厚篤実",h:"穏やかで誠実"},
+{q:"□□選択",a:"取捨選択",h:"要不要を選ぶ"},
+{q:"大胆□□",a:"大胆不敵",h:"恐れないこと"},
+{q:"鯨□馬□",a:"鯨飲馬食",h:"飲食が盛んなこと"},
+{q:"□口牛□",a:"鶏口牛後",h:"小さな組織で先頭に立つ方が良い"},
+{q:"自□自□",a:"自暴自棄",h:"やけになって自分を粗末にすること"},
+{q:"勇□果□",a:"勇猛果敢",h:"勇ましく果敢なこと"},
+{q:"佳□薄□",a:"佳人薄命",h:"美しい人は短命なことが多い"},
+{q:"複□怪□",a:"複雑怪奇",h:"複雑で不思議なこと"},
+{q:"感□無□",a:"感慨無量",h:"深く心に感じること"},
+{q:"首□一□",a:"首尾一貫",h:"物事の筋道が通っていること"},
+{q:"離□集□",a:"離合集散",h:"人々が集まり散ること"},
+{q:"沈□黙□",a:"沈思黙考",h:"沈んで思いを巡らすこと"},
+{q:"美□麗□",a:"美辞麗句",h:"言葉が美しいこと"},
+{q:"遠□会□",a:"遠慮会釈",h:"相手に気を使うこと"},
+{q:"猪□猛□",a:"猪突猛進",h:"考えずに突き進むこと"},
+{q:"孤□奮□",a:"孤軍奮闘",h:"一人で奮闘すること"},
+{q:"多□多□",a:"多情多恨",h:"情に厚く恨みも多いこと"},
+{q:"一□入□",a:"一球入魂",h:"全力を尽くすこと"},
+{q:"孤□無□",a:"孤立無援",h:"助けがなく孤立していること"},
+{q:"伸□自□",a:"伸縮自在",h:"自由に伸び縮みすること"},
+{q:"面□躍□",a:"面目躍如",h:"実力がはっきり現れること"},
+{q:"意□衝□",a:"意気衝天",h:"気力が非常に盛んなこと"},
+{q:"粒□辛□",a:"粒粒辛苦",h:"一つ一つの努力を重ねること"},
+{q:"栄□盛□",a:"栄枯盛衰",h:"物事の盛衰があること"},
+{q:"酔□夢□",a:"酔生夢死",h:"人生を無為に過ごすこと"},
+{q:"国□無□",a:"国士無双",h:"非常に優れた人物"},
+{q:"粗□粗□",a:"粗衣粗食",h:"質素な生活"},
+{q:"換□奪□",a:"換骨奪胎",h:"他人の作品を自分のものに変えること"},
+{q:"受□告□",a:"受胎告知",h:"キリスト教の受胎告知"},
+{q:"人□無□",a:"人畜無害",h:"無害な人"},
+{q:"新□代□",a:"新陳代謝",h:"体内で古いものが新しく入れ替わること"}
 ],
-reading:[
-{q:"春は細かな 霧雨 が降る",a:"きりさめ"},{q:"この 紋所 が目に入らぬか",a:"もんどころ"},
-{q:"飛行機の 尾翼 のマークを見る",a:"びよく"},{q:"話すことに 脈絡 がない",a:"みゃくらく"},
-{q:"嘘が 露見 する",a:"ろけん"},{q:"漢詩を 朗詠 する",a:"ろうえい"},
-{q:"本を探して 書架 を確認する",a:"しょか"},{q:"お腹いっぱい食べてご 満悦 だ",a:"まんえつ"},
-{q:"赤い日を落ちるのを一つと 勘定 した",a:"かんじょう"},{q:"人生の 岐路 に立つ",a:"きろ"},
-{q:"ロケットの 軌道 を計算する",a:"きどう"},{q:"結婚して 岳父 に会う",a:"がくふ"},
-{q:"UFOが 虚空 に消える",a:"こくう"},{q:"血液の 凝固 が始まる",a:"ぎょうこ"},
-{q:"パンを 一斤 だから買う",a:"いっきん"},{q:"スーパーで 鶏卵 を買う",a:"けいらん"},
-{q:"馬の 手綱 を引く",a:"たづな"},{q:"国が 国債 を発行する",a:"こくさい"},
-{q:"鼻孔 をくすぐる匂いがする",a:"びこう"},{q:"苦手な教科を 克服 する",a:"こくふく"},
-{q:"提出された議題を 諮 る",a:"はか"},{q:"新しい法律が 施行 される",a:"しこう"},
-{q:"法律を 遵守 する",a:"じゅんしゅ"},{q:"温暖 湿潤 な気候に住んでいる",a:"しつじゅん"},
-{q:"一人暮らしで 自炊 する",a:"じすい"},{q:"反発する力を 斥力 という",a:"せきりょく"},
-{q:"着物で 粋 な着こなしをする",a:"いき"},{q:"神に 犠牲 をささげる",a:"ぎせい"},
-{q:"首里城の 礎石 を発掘する",a:"そせき"},{q:"「っ」を 促音 という",a:"そくおん"},
-{q:"他人のお菓子を 強奪 する",a:"ごうだつ"},{q:"勉強を 怠 る",a:"おこた"},
-{q:"稚児 のそら寝を学ぶ",a:"ちご"},{q:"鍛鉄 でナイフを作る",a:"たんてつ"},
-{q:"溶けた金属を 鋳型 に流し込む",a:"いがた"},{q:"消防隊が 鎮火 する",a:"ちんか"},
-{q:"死んだ人を 追慕 する",a:"ついぼ"},{q:"田んぼの 畔 を作る",a:"あぜ"},
-{q:"裁判の 陪審員 に選ばれる",a:"ばいしんいん"},{q:"森林を 伐採 する",a:"ばっさい"}
+reading: [
+{q:"春は細かな 霧雨 が降る",a:"きりさめ"},
+{q:"この 紋所 が目に入らぬか",a:"もんどころ"},
+{q:"飛行機の 尾翼 のマークを見る",a:"びよく"},
+{q:"話すことに 脈絡 がない",a:"みゃくらく"},
+{q:"嘘が 露見 する",a:"ろけん"},
+{q:"漢詩を 朗詠 する",a:"ろうえい"},
+{q:"本を探して 書架 を確認する",a:"しょか"},
+{q:"お腹いっぱい食べてご 満悦 だ",a:"まんえつ"},
+{q:"赤い日を落ちるのを一つと 勘定 した",a:"かんじょう"},
+{q:"人生の 岐路 に立つ",a:"きろ"},
+{q:"ロケットの 軌道 を計算する",a:"きどう"},
+{q:"結婚して 岳父 に会う",a:"がくふ"},
+{q:"UFOが 虚空 に消える",a:"こくう"},
+{q:"血液の 凝固 が始まる",a:"ぎょうこ"},
+{q:"パンを 一斤 だから買う",a:"いっきん"},
+{q:"スーパーで 鶏卵 を買う",a:"けいらん"},
+{q:"馬の 手綱 を引く",a:"たづな"},
+{q:"国が 国債 を発行する",a:"こくさい"},
+{q:"鼻孔 をくすぐる匂いがする",a:"びこう"},
+{q:"苦手な教科を 克服 する",a:"こくふく"},
+{q:"提出された議題を 諮 る",a:"はか"},
+{q:"新しい法律が 施行 される",a:"しこう"},
+{q:"法律を 遵守 する",a:"じゅんしゅ"},
+{q:"温暖 湿潤 な気候に住んでいる",a:"しつじゅん"},
+{q:"一人暮らしで 自炊 する",a:"じすい"},
+{q:"反発する力を 斥力 という",a:"せきりょく"},
+{q:"着物で 粋 な着こなしをする",a:"いき"},
+{q:"神に 犠牲 をささげる",a:"ぎせい"},
+{q:"首里城の 礎石 を発掘する",a:"そせき"},
+{q:"「っ」を 促音 という",a:"そくおん"},
+{q:"他人のお菓子を 強奪 する",a:"ごうだつ"},
+{q:"勉強を 怠 る",a:"おこた"},
+{q:"稚児 のそら寝を学ぶ",a:"ちご"},
+{q:"鍛鉄 でナイフを作る",a:"たんてつ"},
+{q:"溶けた金属を 鋳型 に流し込む",a:"いがた"},
+{q:"消防隊が 鎮火 する",a:"ちんか"},
+{q:"死んだ人を 追慕 する",a:"ついぼ"},
+{q:"田んぼの 畔 を作る",a:"あぜ"},
+{q:"裁判の 陪審員 に選ばれる",a:"ばいしんいん"},
+{q:"森林を 伐採 する",a:"ばっさい"}
 ],
-kanji:[
-{q:"授業中に いねむり する",a:"居眠り"},{q:"庭の しげみ にマングースがいる",a:"茂み"},
-{q:"金属を ようせつ する",a:"溶接"},{q:"次の くうらん に適切な語句を入れなさい",a:"空欄"},
-{q:" りんじん を愛せ",a:"隣人"},{q:"危険物取扱者試験の おつしゅ を受ける",a:"乙種"},
-{q:" りゅうれい な文字を書く",a:"流麗"},{q:"商品を おろしね で売る",a:"卸値"},
-{q:"夜道に きかい な影を見る",a:"奇怪"},{q:"パソコンで えんかく 授業を受ける",a:"遠隔"},
-{q:"異世界に しょうかん される",a:"召喚"},{q:"星の破片は なめ らかだった",a:"滑"},
-{q:"電話を取ったら とくしゅ 詐欺だった",a:"特殊"},{q:"人気の きっさてん に入る",a:"喫茶店"},
-{q:"手紙の最初に はいけい と書く",a:"拝啓"},{q:"日本には ほげい 文化がある",a:"捕鯨"},
-{q:"唇が こ を描く",a:"弧"},{q:"寝坊して おおあわて する",a:"大慌て"},
-{q:"海の真ん中にある ことう に渡る",a:"孤島"},{q:" こんでんえいねんしざいほう",a:"墾田永年私財法"},
-{q:"危機感が けつじょ している",a:"欠如"},{q:"歯車は じく を中心に回転する",a:"軸"},
-{q:"三人寄れば もんじゅ の知恵",a:"文殊"},{q:"イベントを しゅさい する",a:"主催"},
-{q:"寮の部屋を せじょう した",a:"施錠"},{q:"沖縄は こうしんりょう 栽培の北限だ",a:"香辛料"},
-{q:"お じょう さん、お待ちなさい",a:"嬢"},{q:"任務を すいこう する",a:"遂行"},
-{q:"轟の たき を見に行く",a:"滝"},{q:"構内に くわ の木が生えている",a:"桑"},
-{q:"攻撃を そし する",a:"阻止"},{q:"放課後に そうじ する",a:"掃除"},
-{q:"道路に ちゅうしゃ する",a:"駐車"},{q:"間違いを ていせい する",a:"訂正"},
-{q:"北に ほくとしちせい が見える",a:"北斗七星"},{q:"読谷は とうき が有名だ",a:"陶器"},
-{q:"中東の ふんそうちたい へ行く",a:"紛争地帯"},{q:"琉歌の かひ を建てる",a:"歌碑"},
-{q:"ねんど をこねて作品を作る",a:"粘土"},{q:"教員が学校に ふにん する",a:"赴任"}
-]
-};
+kanji: [
+{q:"授業中に いねむり する",a:"居眠り"},
+{q:"庭の しげみ にマングースがいる",a:"茂み"},
+{q:"金属を ようせつ する",a:"溶接"},
+{q:"次の くうらん に適切な語句を入れなさい",a:"空欄"},
+{q:" りんじん を愛せ",a:"隣人"},
+{q:"危険物取扱者試験の おつしゅ を受ける",a:"乙種"},
+{q:" りゅうれい な文字を書く",a:"流麗"},
+{q:"商品を おろしね で売る",a:"卸値"},
+{q:"夜道に きかい な影を見る",a:"奇怪"},
+{q:"パソコンで えんかく 授業を受ける",a:"遠隔"},
+{q:"異世界に しょうかん される",a:"召喚"},
+{q:"星の破片は なめ らかだった",a:"滑"},
+{q:"電話を取ったら とくしゅ 詐欺だった",a:"特殊"},
+{q:"人気の きっさてん に入る",a:"喫茶店"},
+{q:"手紙の最初に はいけい と書く",a:"拝啓"},
+{q:"日本には ほげい 文化がある",a:"捕鯨"},
+{q:"唇が こ を描く",a:"弧"},
+{q:"寝坊して おおあわて する",a:"大慌て"},
+{q:"海の真ん中にある ことう に渡る",a:"孤島"},
+{q:" こんでんえいねんしざいほう",a:"墾田永年私財法"},
+{q:"危機感が けつじょ している",a:"欠如"},
+{q:"歯車は じく を中心に回転する",a:"軸"},
+{q:"三人寄れば もんじゅ の知恵",a:"文殊"},
+{q:"イベントを しゅさい する",a:"主催"},
+{q:"寮の部屋を せじょう した",a:"施錠"},
+{q:"沖縄は こうしんりょう 栽培の北限だ",a:"香辛料"},
+{q:"お じょう さん、お待ちなさい",a:"嬢"},
+{q:"任務を すいこう する",a:"遂行"},
+{q:"轟の たき を見に行く",a:"滝"},
+{q:"構内に くわ の木が生えている",a:"桑"},
+{q:"攻撃を そし する",a:"阻止"},
+{q:"放課後に そうじ する",a:"掃除"},
+{q:"道路に ちゅうしゃ する",a:"駐車"},
+{q:"間違いを ていせい する",a:"訂正"},
+{q:"北に ほくとしちせい が見える",a:"北斗七星"},
+{q:"読谷は とうき が有名だ",a:"陶器"},
+{q:"中東の ふんそうちたい へ行く",a:"紛争地帯"},
+{q:"琉歌の かひ を建てる",a:"歌碑"},
+{q:" ねんど をこねて作品を作る",a:"粘土"},
+{q:"教員が学校に ふにん する",a:"赴任"}
+]};
 
-/* ===== ロジック ===== */
+/* ===== アプリロジック ===== */
 let currentQuestions=[],currentIndex=0,showOnlyBookmarked=false;
 let bookmarks=JSON.parse(localStorage.getItem("kokugo_bookmarks")||"{}");
 
-const modeSelect=document.getElementById("modeSelect");
-const qText=document.getElementById("qText");
-const qHint=document.getElementById("qHint");
-const aText=document.getElementById("aText");
-const counter=document.getElementById("counter");
-const card=document.getElementById("card");
-const starBtn=document.getElementById("starBtn");
-const filterBtn=document.getElementById("filterBtn");
-
 function initApp(){
-  const mode=modeSelect.value;
-  currentQuestions=showOnlyBookmarked
-    ? data[mode].filter(q=>bookmarks[mode+"_"+q.a])
+  const mode = modeSelect.value;
+  // 現在のモードのブックマークのみ抽出
+  const modeBookmarks = {};
+  for(const key in bookmarks){
+    if(key.startsWith(mode+"_")) modeBookmarks[key]=bookmarks[key];
+  }
+
+  currentQuestions = showOnlyBookmarked
+    ? data[mode].filter(q=>modeBookmarks[mode+"_"+q.a])
     : [...data[mode]];
+    
   currentIndex=0;
   updateCard();
 }
@@ -249,6 +309,7 @@ function updateCard(){
     aText.innerText="-";
     qHint.innerText="";
     counter.innerText="0 / 0";
+    starBtn.classList.remove("active");
     return;
   }
   card.classList.remove("is-flipped");
@@ -258,55 +319,46 @@ function updateCard(){
   qHint.innerText=q.h||"";
   aText.innerText=q.a;
   counter.innerText=`${currentIndex+1} / ${currentQuestions.length}`;
-  starBtn.classList.toggle("active",bookmarks[mode+"_"+q.a]);
+
+  const key=mode+"_"+q.a;
+  starBtn.classList.toggle("active",!!bookmarks[key]);
 }
 
-function flipCard(){card.classList.toggle("is-flipped")}
-function nextCard(){currentIndex=(currentIndex+1)%currentQuestions.length;updateCard()}
-function prevCard(){currentIndex=(currentIndex-1+currentQuestions.length)%currentQuestions.length;updateCard()}
+function flipCard(){ card.classList.toggle("is-flipped"); }
 
-starBtn.addEventListener("click",e=>{
+function prevCard(e){ e.stopPropagation(); if(currentIndex>0){currentIndex--;updateCard();} }
+function nextCard(e){ e.stopPropagation(); if(currentIndex<currentQuestions.length-1){currentIndex++;updateCard();} }
+
+function toggleBookmark(e){
   e.stopPropagation();
   const mode=modeSelect.value;
   const q=currentQuestions[currentIndex];
-  const k=mode+"_"+q.a;
-  bookmarks[k]?delete bookmarks[k]:bookmarks[k]=1;
+  const key=mode+"_"+q.a;
+  if(bookmarks[key]) delete bookmarks[key];
+  else bookmarks[key]=true;
   localStorage.setItem("kokugo_bookmarks",JSON.stringify(bookmarks));
-  updateCard();
-});
+  starBtn.classList.toggle("active");
+}
 
-filterBtn.addEventListener("click",()=>{
+function toggleOnlyBookmarked(){
   showOnlyBookmarked=!showOnlyBookmarked;
-  filterBtn.innerText=showOnlyBookmarked?"全て表示":"ブックマークのみを表示";
+  filterBtnText.innerText=showOnlyBookmarked?"全て表示":"ブックマークのみを表示";
   initApp();
+}
+
+/* ===== スワイプ対応（スマホ） ===== */
+let startX=null;
+cardContainer.addEventListener("touchstart",e=>{startX=e.touches[0].clientX;});
+cardContainer.addEventListener("touchend",e=>{
+  if(startX===null) return;
+  const endX=e.changedTouches[0].clientX;
+  const diff=endX-startX;
+  if(diff>50) prevCard(new Event("click"));
+  else if(diff<-50) nextCard(new Event("click"));
+  startX=null;
 });
 
-modeSelect.addEventListener("change",initApp);
-card.addEventListener("click",flipCard);
-
-document.getElementById("nextBtn").addEventListener("click",nextCard);
-document.getElementById("prevBtn").addEventListener("click",prevCard);
-
-/* キーボード操作 */
-document.addEventListener("keydown",e=>{
-  if(["INPUT","SELECT","TEXTAREA"].includes(e.target.tagName))return;
-  if(e.key==="ArrowRight")nextCard();
-  if(e.key==="ArrowLeft")prevCard();
-  if(e.key===" ")flipCard();
-});
-
-/* スワイプ対応 */
-let startX=0;
-const touchArea=document.getElementById("touchArea");
-touchArea.addEventListener("touchstart",e=>{startX=e.touches[0].clientX});
-touchArea.addEventListener("touchend",e=>{
-  const dx=e.changedTouches[0].clientX-startX;
-  if(dx>50)prevCard();
-  else if(dx<-50)nextCard();
-});
-
-/* 初期化 */
-window.addEventListener("DOMContentLoaded",initApp);
+initApp();
 </script>
 </body>
 </html>
