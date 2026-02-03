@@ -1,203 +1,296 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>漢字テスト</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>国語 小テスト対策 - フラッシュカード</title>
 
-  <!-- ★ LaTeX を表示するための MathJax 読み込み ★ -->
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+:root{
+  --primary:#4a90e2;
+  --secondary:#f39c12;
+  --bg:#f5f7fa;
+  --text:#333;
+}
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:var(--bg);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+}
+header{
+  width:100%;
+  padding:15px;
+  background:white;
+  text-align:center;
+  box-shadow:0 2px 5px rgba(0,0,0,.1);
+}
+.controls{
+  margin:15px;
+  display:flex;
+  gap:10px;
+}
+select,button{
+  padding:10px 15px;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+.counter{color:#777;margin-bottom:10px}
 
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #f2ffcb, #a5f5ff);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
+/* カード */
+.card-container{
+  width:90%;
+  max-width:400px;
+  height:250px;
+  perspective:1000px;
+  position:relative;
+}
+.card{
+  width:100%;
+  height:100%;
+  position:relative;
+  transform-style:preserve-3d;
+  transition:transform .6s;
+  border-radius:15px;
+  box-shadow:0 10px 20px rgba(0,0,0,.15);
+}
+.card.is-flipped{transform:rotateY(180deg)}
+.card-face{
+  position:absolute;
+  inset:0;
+  backface-visibility:hidden;
+  background:white;
+  border-radius:15px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+  box-sizing:border-box;
+  text-align:center;
+}
+.card-back{
+  transform:rotateY(180deg);
+  background:#eef5ff;
+}
+.question{font-size:1.4rem;font-weight:bold}
+.answer{font-size:1.8rem;color:var(--primary);font-weight:bold}
+.hint{font-size:.9rem;color:#666;margin-top:10px}
 
-    h1 {
-      margin-bottom: 20px;
-      color: #333;
-      font-size: 32px;
-    }
+/* ブックマーク */
+.btn-star{
+  position:absolute;
+  top:10px;
+  right:15px;
+  font-size:28px;
+  background:none;
+  border:none;
+  color:#ccc;
+  cursor:pointer;
+  z-index:10;
+}
+.btn-star.active{color:var(--secondary)}
 
-    #counter {
-      font-size: 16px;
-      color: #555;
-      margin-bottom: 10px;
-    }
-
-    #card-container {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      padding: 40px;
-      width: 400px;
-      text-align: center;
-      cursor: pointer;
-    }
-
-    #card {
-      font-size: 24px;
-      color: #444;
-      margin-bottom: 20px;
-    }
-
-    #answer {
-      font-size: 40px;
-      color: #00796b;
-      margin-top: 10px;
-      opacity: 0;
-    }
-
-    #answer.visible {
-      opacity: 1;
-    }
-
-    .controls {
-      margin-top: 20px;
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .controls button {
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      background-color: #00796b;
-      color: white;
-      cursor: pointer;
-    }
-
-    .controls button:hover {
-      background-color: #004d40;
-    }
-
-    .hint {
-      margin-top: 30px;
-      font-size: 14px;
-      color: #666;
-    }
-  </style>
+.nav-buttons{
+  margin:20px;
+  display:flex;
+  gap:20px;
+}
+.btn-nav{
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  border:none;
+  background:var(--primary);
+  color:white;
+  font-size:20px;
+}
+</style>
 </head>
+
 <body>
-  <h1>漢字テスト8回目</h1>
-  <div id="counter">読み込み中...</div>
 
-  <div id="card-container" onclick="toggleAnswer()">
-    <div id="card">...</div>
-    <div id="answer"></div>
+<header><h3>国語 小テスト 対策</h3></header>
+
+<div class="controls">
+<select id="modeSelect" onchange="initApp()">
+  <option value="yoji">四字熟語</option>
+  <option value="kanji">漢字</option>
+  <option value="reading">読み</option>
+</select>
+<button onclick="toggleOnlyBookmarked()">
+  <span id="filterBtnText">ブックマークのみを表示</span>
+</button>
+</div>
+
+<div class="counter" id="counter"></div>
+
+<div class="card-container" onclick="flipCard()">
+<button class="btn-star" id="starBtn" onclick="toggleBookmark(event)">★</button>
+<div class="card" id="card">
+  <div class="card-face">
+    <div class="question" id="qText"></div>
+    <div class="hint" id="qHint"></div>
   </div>
-
-  <div class="controls">
-    <button onclick="previousCard()">← 前へ</button>
-    <button onclick="randomCard()">🎲</button>
-    <button onclick="nextCard()">次へ →</button>
+  <div class="card-face card-back">
+    <div class="answer" id="aText"></div>
   </div>
+</div>
+</div>
 
-  <div class="hint">←前｜→次｜↓↑答え｜WASD対応｜クリックで表示｜🎲ランダム</div>
+<div class="nav-buttons">
+<button class="btn-nav" onclick="prevCard(event)">←</button>
+<button class="btn-nav" onclick="nextCard(event)">→</button>
+</div>
 
-  <script src="kanji5.js"></script>
+<script>
+/* ===== 元の問題データを一切削らずそのまま ===== */
+const data = {
+yoji: [
+{ q:"一□□千", a:"一騎当千", h:"一人で千人の敵に対抗できるほど強いこと" },
+{ q:"□怒哀□", a:"喜怒哀楽", h:"人間の様々な感情" },
+{ q:"□□実実", a:"虚虚実実", h:"互いに策を尽くして戦うこと" },
+{ q:"平穏□□", a:"平穏無事", h:"変わったこともなく穏やかなこと" },
+{ q:"□和□同", a:"付和雷同", h:"自分の考えがなく他人の意見に同調すること" },
+{ q:"一□打□", a:"一網打尽", h:"一度に一味をすべて捕らえること" },
+{ q:"小心□□", a:"小心翼翼", h:"気が小さくびくびくしている様子" },
+{ q:"□□割拠", a:"群雄割拠", h:"多くの英雄が対立すること" },
+{ q:"愛□□苦", a:"愛別離苦", h:"愛する者と別れる苦しみ" },
+{ q:"□幻自□", a:"変幻自在", h:"思いのままに変化すること" },
+{ q:"□己□礼", a:"克己復礼", h:"私欲を抑え礼に戻ること" },
+{ q:"巧□令□", a:"巧言令色", h:"言葉巧みに取り入ること" },
+{ q:"□慈□悲", a:"大慈大悲", h:"大きな慈しみ" },
+{ q:"不□長□", a:"不老長寿", h:"老いずに長生き" },
+{ q:"□婚□祭", a:"冠婚葬祭", h:"人生の重要行事" },
+{ q:"試□錯□", a:"試行錯誤", h:"失敗を繰り返すこと" },
+{ q:"□殺□奪", a:"生殺与奪", h:"生死を左右すること" },
+{ q:"温□篤□", a:"温厚篤実", h:"穏やかで誠実" },
+{ q:"□□選択", a:"取捨選択", h:"要不要を選ぶ" },
+{ q:"大胆□□", a:"大胆不敵", h:"恐れないこと" }
+],
+kanji: [
+{ q:"春は細かな（きりさめ）が降る", a:"霧雨" },
+{ q:"この（もんどころ）が目に入らぬか", a:"紋所" },
+{ q:"飛行機の（びよく）のマーク", a:"尾翼" },
+{ q:"話すことに（みゃくらく）がない", a:"脈絡" },
+{ q:"金属を（ようせつ）する", a:"溶接" },
+{ q:"次の（くうらん）に", a:"空欄" },
+{ q:"嘘が（ろけん）する", a:"露見" },
+{ q:"漢詩を（ろうえい）する", a:"朗詠" },
+{ q:"ご（まんえつ）だ", a:"満悦" },
+{ q:"人生の（きろ）", a:"岐路" },
+{ q:"ロケットの（きどう）", a:"軌道" },
+{ q:"（きかい）な影", a:"奇怪" },
+{ q:"異世界に（しょうかん）", a:"召喚" },
+{ q:"血液の（ぎょうこ）", a:"凝固" },
+{ q:"（きっさてん）", a:"喫茶店" },
+{ q:"（ほげい）文化", a:"捕鯨" },
+{ q:"（こくさい）を発行", a:"国債" },
+{ q:"（こくふく）する", a:"克服" },
+{ q:"法律を（じゅんしゅ）", a:"遵守" },
+{ q:"イベントを（しゅさい）", a:"主催" },
+{ q:"（すいこう）する", a:"遂行" },
+{ q:"攻撃を（そし）する", a:"阻止" },
+{ q:"消防隊が（ちんか）", a:"鎮火" },
+{ q:"道路に（ちゅうしゃ）", a:"駐車" },
+{ q:"間違いを（ていせい）", a:"訂正" },
+{ q:"（ふんそうちたい）", a:"紛争地帯" }
+],
+reading: [
+{ q:"居眠り", a:"いねむり" },
+{ q:"茂み", a:"しげみ" },
+{ q:"隣人", a:"りんじん" },
+{ q:"流麗", a:"りゅうれい" },
+{ q:"卸値", a:"おろしね" },
+{ q:"勘定", a:"かんじょう" },
+{ q:"岳父", a:"がくふ" },
+{ q:"滑らか", a:"なめらか" },
+{ q:"一斤", a:"いっきん" },
+{ q:"拝啓", a:"はいけい" },
+{ q:"手綱", a:"たづな" },
+{ q:"鼻腔", a:"びこう" },
+{ q:"諮る", a:"はかる" },
+{ q:"湿潤", a:"しつじゅん" },
+{ q:"欠如", a:"けつじょ" },
+{ q:"文殊", a:"もんじゅ" },
+{ q:"自炊", a:"じすい" },
+{ q:"施錠", a:"せじょう" },
+{ q:"促音", a:"そくおん" },
+{ q:"怠る", a:"おこたる" },
+{ q:"轟の滝", a:"とどろきのたき" },
+{ q:"桑の木", a:"くわのき" },
+{ q:"稚児", a:"ちご" },
+{ q:"鋳型", a:"いがた" },
+{ q:"北斗七星", a:"ほくとしちせい" },
+{ q:"陶器", a:"とうき" },
+{ q:"追慕", a:"ついぼ" },
+{ q:"畔", a:"あぜ" }
+]
+};
 
-  <script>
-    let currentIndex = 0;
-    let answerVisible = false;
-    let hideTimeout = null;
+/* ===== ロジック ===== */
+let currentQuestions=[],currentIndex=0,showOnlyBookmarked=false;
+let bookmarks=JSON.parse(localStorage.getItem("kokugo_bookmarks")||"{}");
 
-    function renderMath() {
-      if (window.MathJax) {
-        MathJax.typesetPromise();
-      }
-    }
+function initApp(){
+  const mode=modeSelect.value;
+  currentQuestions=showOnlyBookmarked
+    ? data[mode].filter(q=>bookmarks[mode+"_"+q.a])
+    : [...data[mode]];
+  currentIndex=0;
+  updateCard();
+}
 
-    function showCard() {
-      document.getElementById("card").innerHTML = flashcards[currentIndex].question;
-      document.getElementById("answer").innerHTML = flashcards[currentIndex].answer;
+function updateCard(){
+  if(!currentQuestions.length){
+    qText.innerText="問題なし";
+    aText.innerText="-";
+    counter.innerText="0 / 0";
+    return;
+  }
+  card.classList.remove("is-flipped");
+  const q=currentQuestions[currentIndex];
+  const mode=modeSelect.value;
+  qText.innerText=q.q;
+  qHint.innerText=q.h||"";
+  aText.innerText=q.a;
+  counter.innerText=`${currentIndex+1} / ${currentQuestions.length}`;
+  starBtn.classList.toggle("active",bookmarks[mode+"_"+q.a]);
+}
 
-      answerVisible = false;
-      updateAnswerVisibility();
+function flipCard(){card.classList.toggle("is-flipped")}
+function nextCard(e){e?.stopPropagation();currentIndex=(currentIndex+1)%currentQuestions.length;updateCard()}
+function prevCard(e){e?.stopPropagation();currentIndex=(currentIndex-1+currentQuestions.length)%currentQuestions.length;updateCard()}
 
-      document.getElementById("counter").innerText =
-        `${currentIndex + 1}問目／全${flashcards.length}問`;
+function toggleBookmark(e){
+  e.stopPropagation();
+  const mode=modeSelect.value;
+  const q=currentQuestions[currentIndex];
+  const k=mode+"_"+q.a;
+  bookmarks[k]?delete bookmarks[k]:bookmarks[k]=1;
+  localStorage.setItem("kokugo_bookmarks",JSON.stringify(bookmarks));
+  updateCard();
+}
 
-      renderMath();
-    }
+function toggleOnlyBookmarked(){
+  showOnlyBookmarked=!showOnlyBookmarked;
+  filterBtnText.innerText=showOnlyBookmarked?"全て表示":"ブックマークのみを表示";
+  initApp();
+}
 
-    function updateAnswerVisibility() {
-      const answerEl = document.getElementById("answer");
-      if (answerVisible) {
-        answerEl.classList.add("visible");
-      } else {
-        answerEl.classList.remove("visible");
-      }
-      renderMath();
-    }
+/* キーボード操作 */
+document.addEventListener("keydown",e=>{
+  if(["INPUT","SELECT","TEXTAREA"].includes(e.target.tagName))return;
+  if(e.key==="a"||e.key==="A"||e.key==="ArrowLeft")prevCard();
+  if(e.key==="d"||e.key==="D"||e.key==="ArrowRight")nextCard();
+  if(["w","W","s","S","ArrowUp","ArrowDown"].includes(e.key))flipCard();
+});
 
-    function toggleAnswer() {
-      answerVisible = !answerVisible;
-      updateAnswerVisibility();
+initApp();
+</script>
 
-      if (answerVisible) {
-        hideTimeout = setTimeout(() => {
-          answerVisible = false;
-          updateAnswerVisibility();
-        }, 5500);
-      } else {
-        clearTimeout(hideTimeout);
-        hideTimeout = null;
-      }
-    }
-
-    function hideAnswerImmediately() {
-      clearTimeout(hideTimeout);
-      hideTimeout = null;
-      answerVisible = false;
-      updateAnswerVisibility();
-    }
-
-    function nextCard() {
-      hideAnswerImmediately();
-      currentIndex = (currentIndex + 1) % flashcards.length;
-      showCard();
-    }
-
-    function previousCard() {
-      hideAnswerImmediately();
-      currentIndex = (currentIndex - 1 + flashcards.length) % flashcards.length;
-      showCard();
-    }
-
-    function randomCard() {
-      hideAnswerImmediately();
-      let newIndex;
-      do {
-        newIndex = Math.floor(Math.random() * flashcards.length);
-      } while (newIndex === currentIndex && flashcards.length > 1);
-      currentIndex = newIndex;
-      showCard();
-    }
-
-    /* ★★★★★ WASD 追加 ★★★★★ */
-    document.addEventListener("keydown", function(event) {
-      const key = event.key.toLowerCase();
-
-      if (event.key === "ArrowRight" || key === "d") {
-        nextCard();
-      } else if (event.key === "ArrowLeft" || key === "a") {
-        previousCard();
-      } else if (event.key === "ArrowDown" || event.key === "ArrowUp" || key === "s" || key === "w") {
-        toggleAnswer();
-      }
-    });
-
-    window.onload = showCard;
-  </script>
 </body>
 </html>
