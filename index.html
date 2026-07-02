@@ -3,362 +3,614 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>国語 小テスト対策 - フラッシュカード</title>
+<title>敬語稽古帳</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --primary:#4a90e2;
-  --secondary:#f39c12;
-  --bg:#f5f7fa;
-  --text:#333;
-}
-body{
-  margin:0;
-  font-family:sans-serif;
-  background:var(--bg);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  min-height:100vh;
-}
-header{
-  width:100%;
-  padding:15px;
-  background:white;
-  text-align:center;
-  box-shadow:0 2px 5px rgba(0,0,0,.1);
-}
-.controls{
-  margin:15px;
-  display:flex;
-  gap:10px;
-}
-select,button{
-  padding:10px 15px;
-  border-radius:8px;
-  border:1px solid #ddd;
-}
-.counter{color:#777;margin-bottom:10px}
+  :root{
+    --washi:#F1EADA;
+    --washi-deep:#E9E0CC;
+    --sumi:#2A2622;
+    --sumi-soft:#5B564C;
+    --shu:#B23A2E;         /* 朱色 hanko red */
+    --shu-deep:#8F2E24;
+    --ai:#3C5169;           /* 藍色 accent */
+    --line:#C9BEA1;
+    --card:#FBF8F0;
+    --ok-bg:#F4EFDC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 8%, rgba(178,58,46,0.05), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(60,81,105,0.06), transparent 45%),
+      var(--washi);
+    background-attachment:fixed;
+    color:var(--sumi);
+    font-family:"Noto Sans JP", sans-serif;
+    line-height:1.9;
+    padding-bottom:80px;
+  }
+  ::selection{background:var(--shu);color:#fff;}
 
-/* カード */
-.card-container{
-  width:90%;
-  max-width:400px;
-  height:250px;
-  perspective:1000px;
-  position:relative;
-}
-.card{
-  width:100%;
-  height:100%;
-  position:relative;
-  transform-style:preserve-3d;
-  transition:transform .6s;
-  border-radius:15px;
-  box-shadow:0 10px 20px rgba(0,0,0,.15);
-}
-.card.is-flipped{transform:rotateY(180deg)}
-.card-face{
-  position:absolute;
-  inset:0;
-  backface-visibility:hidden;
-  background:white;
-  border-radius:15px;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  padding:20px;
-  box-sizing:border-box;
-  text-align:center;
-}
-.card-back{
-  transform:rotateY(180deg);
-  background:#eef5ff;
-}
-.question{font-size:1.2rem;font-weight:bold}
-.answer{font-size:1.6rem;color:var(--primary);font-weight:bold}
-.hint{font-size:.9rem;color:#666;margin-top:10px}
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    padding:64px 24px 40px;
+    text-align:center;
+    border-bottom:1px solid var(--line);
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image:repeating-linear-gradient(180deg, transparent, transparent 27px, rgba(42,38,34,0.035) 28px);
+    pointer-events:none;
+  }
+  .hero-mark{
+    width:78px;height:78px;margin:0 auto 18px;
+    border:2.5px solid var(--shu);
+    border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--shu);
+    font-family:"Shippori Mincho",serif;
+    font-weight:800;
+    font-size:34px;
+    transform:rotate(-3deg);
+    box-shadow:0 0 0 1px rgba(178,58,46,0.15) inset;
+    background:rgba(178,58,46,0.03);
+  }
+  h1.title{
+    font-family:"Shippori Mincho",serif;
+    font-weight:800;
+    font-size:clamp(30px,5vw,46px);
+    letter-spacing:.06em;
+    margin:0 0 10px;
+  }
+  .subtitle{
+    color:var(--sumi-soft);
+    font-size:14.5px;
+    max-width:560px;
+    margin:0 auto 26px;
+    letter-spacing:.02em;
+  }
+  .hero-rule{
+    width:120px;height:3px;margin:0 auto 26px;
+    background:linear-gradient(90deg,transparent,var(--shu) 30%,var(--shu) 70%,transparent);
+  }
+  .instructions{
+    max-width:620px;margin:0 auto;
+    font-size:13.5px;color:var(--sumi-soft);
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:16px 20px;
+    text-align:left;
+  }
+  .instructions b{color:var(--sumi);}
 
-/* ブックマーク */
-.btn-star{
-  position:absolute;
-  top:10px;
-  right:15px;
-  font-size:28px;
-  background:none;
-  border:none;
-  color:#ccc;
-  cursor:pointer;
-  z-index:10;
-}
-.btn-star.active{color:var(--secondary)}
+  /* ---------- STICKY SCORE ---------- */
+  .scorebar{
+    position:sticky; top:0; z-index:50;
+    background:rgba(241,234,218,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    padding:10px 18px;
+    display:flex; align-items:center; justify-content:center; gap:18px;
+    font-size:13.5px;
+    flex-wrap:wrap;
+  }
+  .scorebar .score-num{
+    font-family:"Shippori Mincho",serif;
+    font-weight:800; color:var(--shu); font-size:17px;
+  }
+  .scorebar button{
+    font-family:"Noto Sans JP",sans-serif;
+    font-size:13px;
+    border:1px solid var(--sumi);
+    background:var(--sumi);
+    color:var(--washi);
+    padding:7px 16px;
+    border-radius:3px;
+    cursor:pointer;
+    letter-spacing:.05em;
+    transition:opacity .15s;
+  }
+  .scorebar button.secondary{
+    background:transparent;color:var(--sumi-soft);border-color:var(--line);
+  }
+  .scorebar button:hover{opacity:.78;}
 
-.nav-buttons{
-  margin:20px;
-  display:flex;
-  gap:20px;
-}
-.btn-nav{
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  border:none;
-  background:var(--primary);
-  color:white;
-  font-size:20px;
-}
+  /* ---------- SECTIONS ---------- */
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px;}
+  section.block{margin-top:56px;}
+  .block-head{
+    display:flex; align-items:baseline; gap:14px;
+    margin-bottom:6px;
+  }
+  .block-num{
+    font-family:"Shippori Mincho",serif;
+    font-size:15px; color:var(--shu);
+    border:1px solid var(--shu);
+    border-radius:50%;
+    width:30px;height:30px;
+    display:flex;align-items:center;justify-content:center;
+    flex:none;
+  }
+  .block-head h2{
+    font-family:"Shippori Mincho",serif;
+    font-size:22px; font-weight:700; margin:0;
+    letter-spacing:.03em;
+  }
+  .block-desc{
+    color:var(--sumi-soft); font-size:13px; margin:0 0 22px 44px;
+  }
+
+  /* ---------- ITEM CARD ---------- */
+  .item{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:18px 20px 14px;
+    margin-bottom:14px;
+    position:relative;
+  }
+  .item-num{
+    position:absolute; top:-11px; left:16px;
+    background:var(--sumi);
+    color:var(--washi);
+    font-size:11px;
+    padding:2px 8px;
+    border-radius:2px;
+    font-family:"Shippori Mincho",serif;
+    letter-spacing:.05em;
+  }
+  .item-context{
+    font-size:11.5px; color:var(--ai); margin:2px 0 8px; letter-spacing:.02em;
+  }
+  .sentence{
+    font-size:16.5px; margin:6px 0 4px; color:var(--sumi);
+  }
+  .blank{
+    display:inline-flex; align-items:flex-end; position:relative; margin:0 2px;
+  }
+  .letter-label{
+    font-family:"Shippori Mincho",serif;
+    color:var(--shu);
+    font-size:11px;
+    font-weight:700;
+    margin-right:1px;
+    top:-2px;
+  }
+  input.blank-input{
+    font-family:"Noto Sans JP",sans-serif;
+    font-size:15.5px;
+    border:none;
+    border-bottom:1.5px dashed var(--sumi-soft);
+    background:transparent;
+    padding:1px 3px;
+    width:9ch;
+    color:var(--sumi);
+    outline:none;
+  }
+  input.blank-input:focus{border-bottom-color:var(--ai); border-bottom-style:solid;}
+  input.blank-input::placeholder{color:#b7ac95; opacity:1; font-style:italic; font-weight:400;}
+  input.blank-input:focus::placeholder{color:#d3c9b2;}
+  input.blank-input.correct{border-bottom-color:var(--shu); color:var(--shu-deep); font-weight:700;}
+  input.blank-input.incorrect{border-bottom-color:#a3958a; text-decoration: line-through; text-decoration-color:rgba(178,58,46,.5);}
+
+  .mark{display:inline-block; width:20px; text-align:center;}
+  .mark.correct::after{
+    content:"◯"; color:var(--shu); font-weight:800; font-size:15px;
+  }
+  .mark.incorrect::after{
+    content:"✕"; color:#8a8177; font-size:13px;
+  }
+
+  .reveal{
+    display:none; font-size:12px; color:var(--shu-deep);
+    margin-left:4px;
+  }
+  .reveal.show{display:inline;}
+
+  .hints{margin-top:10px; display:flex; flex-wrap:wrap; gap:6px;}
+  .hint-chip{
+    font-size:11px; color:var(--sumi-soft);
+    background:var(--washi-deep);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:2px 10px;
+  }
+  .hint-chip b{color:var(--shu); font-family:"Shippori Mincho",serif;}
+  .hint-chip i{font-style:normal; color:#8d8368;}
+
+  /* word bank box */
+  .wordbank{
+    background:var(--washi-deep);
+    border:1px dashed var(--line);
+    border-radius:5px;
+    padding:14px 18px;
+    margin-bottom:16px;
+    font-size:13px;
+    color:var(--sumi-soft);
+  }
+  .wordbank b{color:var(--sumi); font-family:"Shippori Mincho",serif; display:block; margin-bottom:8px; font-size:13.5px;}
+  .wordbank ul{margin:0; padding-left:0; list-style:none; display:flex; flex-wrap:wrap; gap:8px 14px;}
+  .wordbank li{
+    background:var(--card); border:1px solid var(--line); border-radius:3px; padding:4px 10px;
+  }
+
+  footer{
+    text-align:center; color:var(--sumi-soft); font-size:11.5px;
+    margin-top:70px; padding:20px; letter-spacing:.03em;
+  }
+
+  @media (max-width:480px){
+    .hero{padding:44px 16px 30px;}
+    .sentence{font-size:15.5px;}
+    input.blank-input{width:7.2ch; font-size:14.5px;}
+  }
 </style>
 </head>
-
 <body>
-<header><h3>国語 小テスト 対策</h3></header>
 
-<div class="controls">
-<select id="modeSelect" onchange="initApp()">
-  <option value="yoji">四字熟語</option>
-  <option value="reading">漢字の読み</option>
-  <option value="kanji">漢字の書き</option>
-</select>
-<button onclick="toggleOnlyBookmarked()">
-  <span id="filterBtnText">ブックマークのみを表示</span>
-</button>
-</div>
-
-<div class="counter" id="counter"></div>
-
-<div class="card-container" onclick="flipCard()">
-<button class="btn-star" id="starBtn" onclick="toggleBookmark(event)">★</button>
-<div class="card" id="card">
-  <div class="card-face">
-    <div class="question" id="qText"></div>
-    <div class="hint" id="qHint"></div>
-  </div>
-  <div class="card-face card-back">
-    <div class="answer" id="aText"></div>
+<div class="hero">
+  <div class="hero-mark">敬</div>
+  <h1 class="title">敬語稽古帳</h1>
+  <p class="subtitle">アップロードいただいた問題・解答をもとにした、打ち込み式の敬語トレーニングです。空欄に正しい敬語表現を書き込み、採点してみましょう。</p>
+  <div class="hero-rule"></div>
+  <div class="instructions">
+    <b>使い方</b>：文中の下線部（カタカナの符号つき）に、正しい敬語表現を入力してください。全問または各セクションごとに「採点する」を押すと、正解に朱の◯が、誤りに✕がつき、右側に正解が表示されます。〈　〉内の注記は変換のヒントです。
   </div>
 </div>
+
+<div class="scorebar">
+  <span>正答数　<span class="score-num" id="scoreDisplay">0</span> / <span id="scoreTotal">0</span></span>
+  <button id="gradeAllBtn">すべて採点する</button>
+  <button id="resetBtn" class="secondary">やり直す</button>
 </div>
 
-<div class="nav-buttons">
-<button class="btn-nav" onclick="prevCard(event)">←</button>
-<button class="btn-nav" onclick="nextCard(event)">→</button>
+<div class="wrap">
+
+  <section class="block" id="sectionA">
+    <div class="block-head"><span class="block-num">一</span><h2>（　）内を正しい敬語に直す</h2></div>
+    <p class="block-desc">全19問・27箇所。〈　〉は指定・注記です。</p>
+    <div id="containerA"></div>
+  </section>
+
+  <section class="block" id="sectionB">
+    <div class="block-head"><span class="block-num">二</span><h2>（　）内が正しければ「〇」、誤りなら正しい形に</h2></div>
+    <p class="block-desc">すでに適切な敬語であれば「〇」と入力してください。誤りがあれば正しい表現を書き込みます。</p>
+    <div id="containerB"></div>
+  </section>
+
+  <section class="block" id="sectionC">
+    <div class="block-head"><span class="block-num">三</span><h2>応用問題</h2></div>
+    <p class="block-desc">語群のひらがなを漢字を含む適切な敬語表現に直して、空欄をうめましょう。</p>
+    <div class="wordbank">
+      <b>語群</b>
+      <ul>
+        <li>ごそくろうをおかけしますが</li>
+        <li>おてすうですが</li>
+        <li>みにあまるおことばですが</li>
+        <li>ごたぼうちゅうきょうしゅくですが</li>
+        <li>まことにざんねんでございますが</li>
+        <li>さしつかえなければ</li>
+      </ul>
+    </div>
+    <div id="containerC1"></div>
+    <p class="block-desc" style="margin-left:0;margin-top:26px;">目上に対し「急な会議が入ったため、打ち合わせの時間を変更してほしい」と依頼する一文を完成させましょう。</p>
+    <div id="containerC2"></div>
+  </section>
+
 </div>
+
+<footer>敬語稽古帳 ｜ アップロードされた問題データより作成</footer>
 
 <script>
-/* ===== 問題データ（完全版） ===== */
-const data = {
-yoji: [
-{q:"一□□千",a:"一騎当千",h:"一人で千人の敵に対抗できるほど強いこと"},
-{q:"□怒哀□",a:"喜怒哀楽",h:"人間の様々な感情"},
-{q:"□□実実",a:"虚虚実実",h:"互いに策を尽くして戦うこと"},
-{q:"平穏□□",a:"平穏無事",h:"変わったこともなく穏やかなこと"},
-{q:"□和□同",a:"付和雷同",h:"自分の考えがなく他人の意見に同調すること"},
-{q:"一□打□",a:"一網打尽",h:"一度に一味をすべて捕らえること"},
-{q:"小心□□",a:"小心翼翼",h:"気が小さくびくびくしている様子"},
-{q:"□□割拠",a:"群雄割拠",h:"多くの英雄が対立すること"},
-{q:"愛□□苦",a:"愛別離苦",h:"愛する者と別れる苦しみ"},
-{q:"□幻自□",a:"変幻自在",h:"思いのままに変化すること"},
-{q:"□己□礼",a:"克己復礼",h:"私欲を抑え礼に戻ること"},
-{q:"巧□令□",a:"巧言令色",h:"言葉巧みに取り入ること"},
-{q:"□慈□悲",a:"大慈大悲",h:"大きな慈しみ"},
-{q:"不□長□",a:"不老長寿",h:"老いずに長生き"},
-{q:"□婚□祭",a:"冠婚葬祭",h:"人生の重要行事"},
-{q:"試□錯□",a:"試行錯誤",h:"失敗を繰り返すこと"},
-{q:"□殺□奪",a:"生殺与奪",h:"生死を左右すること"},
-{q:"温□篤□",a:"温厚篤実",h:"穏やかで誠実"},
-{q:"□□選択",a:"取捨選択",h:"要不要を選ぶ"},
-{q:"大胆□□",a:"大胆不敵",h:"恐れないこと"},
-{q:"鯨□馬□",a:"鯨飲馬食",h:"飲食が盛んなこと"},
-{q:"□口牛□",a:"鶏口牛後",h:"小さな組織で先頭に立つ方が良い"},
-{q:"自□自□",a:"自暴自棄",h:"やけになって自分を粗末にすること"},
-{q:"勇□果□",a:"勇猛果敢",h:"勇ましく果敢なこと"},
-{q:"佳□薄□",a:"佳人薄命",h:"美しい人は短命なことが多い"},
-{q:"複□怪□",a:"複雑怪奇",h:"複雑で不思議なこと"},
-{q:"感□無□",a:"感慨無量",h:"深く心に感じること"},
-{q:"首□一□",a:"首尾一貫",h:"物事の筋道が通っていること"},
-{q:"離□集□",a:"離合集散",h:"人々が集まり散ること"},
-{q:"沈□黙□",a:"沈思黙考",h:"沈んで思いを巡らすこと"},
-{q:"美□麗□",a:"美辞麗句",h:"言葉が美しいこと"},
-{q:"遠□会□",a:"遠慮会釈",h:"相手に気を使うこと"},
-{q:"猪□猛□",a:"猪突猛進",h:"考えずに突き進むこと"},
-{q:"孤□奮□",a:"孤軍奮闘",h:"一人で奮闘すること"},
-{q:"多□多□",a:"多情多恨",h:"情に厚く恨みも多いこと"},
-{q:"一□入□",a:"一球入魂",h:"全力を尽くすこと"},
-{q:"孤□無□",a:"孤立無援",h:"助けがなく孤立していること"},
-{q:"伸□自□",a:"伸縮自在",h:"自由に伸び縮みすること"},
-{q:"面□躍□",a:"面目躍如",h:"実力がはっきり現れること"},
-{q:"意□衝□",a:"意気衝天",h:"気力が非常に盛んなこと"},
-{q:"粒□辛□",a:"粒粒辛苦",h:"一つ一つの努力を重ねること"},
-{q:"栄□盛□",a:"栄枯盛衰",h:"物事の盛衰があること"},
-{q:"酔□夢□",a:"酔生夢死",h:"人生を無為に過ごすこと"},
-{q:"国□無□",a:"国士無双",h:"非常に優れた人物"},
-{q:"粗□粗□",a:"粗衣粗食",h:"質素な生活"},
-{q:"換□奪□",a:"換骨奪胎",h:"他人の作品を自分のものに変えること"},
-{q:"受□告□",a:"受胎告知",h:"キリスト教の受胎告知"},
-{q:"人□無□",a:"人畜無害",h:"無害な人"},
-{q:"新□代□",a:"新陳代謝",h:"体内で古いものが新しく入れ替わること"}
-],
-reading: [
-{q:"春は細かな 霧雨 が降る",a:"きりさめ"},
-{q:"この 紋所 が目に入らぬか",a:"もんどころ"},
-{q:"飛行機の 尾翼 のマークを見る",a:"びよく"},
-{q:"話すことに 脈絡 がない",a:"みゃくらく"},
-{q:"嘘が 露見 する",a:"ろけん"},
-{q:"漢詩を 朗詠 する",a:"ろうえい"},
-{q:"本を探して 書架 を確認する",a:"しょか"},
-{q:"お腹いっぱい食べてご 満悦 だ",a:"まんえつ"},
-{q:"赤い日を落ちるのを一つと 勘定 した",a:"かんじょう"},
-{q:"人生の 岐路 に立つ",a:"きろ"},
-{q:"ロケットの 軌道 を計算する",a:"きどう"},
-{q:"結婚して 岳父 に会う",a:"がくふ"},
-{q:"UFOが 虚空 に消える",a:"こくう"},
-{q:"血液の 凝固 が始まる",a:"ぎょうこ"},
-{q:"パンを 一斤 だから買う",a:"いっきん"},
-{q:"スーパーで 鶏卵 を買う",a:"けいらん"},
-{q:"馬の 手綱 を引く",a:"たづな"},
-{q:"国が 国債 を発行する",a:"こくさい"},
-{q:"鼻孔 をくすぐる匂いがする",a:"びこう"},
-{q:"苦手な教科を 克服 する",a:"こくふく"},
-{q:"提出された議題を 諮 る",a:"はか"},
-{q:"新しい法律が 施行 される",a:"しこう"},
-{q:"法律を 遵守 する",a:"じゅんしゅ"},
-{q:"温暖 湿潤 な気候に住んでいる",a:"しつじゅん"},
-{q:"一人暮らしで 自炊 する",a:"じすい"},
-{q:"反発する力を 斥力 という",a:"せきりょく"},
-{q:"着物で 粋 な着こなしをする",a:"いき"},
-{q:"神に 犠牲 をささげる",a:"ぎせい"},
-{q:"首里城の 礎石 を発掘する",a:"そせき"},
-{q:"「っ」を 促音 という",a:"そくおん"},
-{q:"他人のお菓子を 強奪 する",a:"ごうだつ"},
-{q:"勉強を 怠 る",a:"おこた"},
-{q:"稚児 のそら寝を学ぶ",a:"ちご"},
-{q:"鍛鉄 でナイフを作る",a:"たんてつ"},
-{q:"溶けた金属を 鋳型 に流し込む",a:"いがた"},
-{q:"消防隊が 鎮火 する",a:"ちんか"},
-{q:"死んだ人を 追慕 する",a:"ついぼ"},
-{q:"田んぼの 畔 を作る",a:"あぜ"},
-{q:"裁判の 陪審員 に選ばれる",a:"ばいしんいん"},
-{q:"森林を 伐採 する",a:"ばっさい"}
-],
-kanji: [
-{q:"授業中に いねむり する",a:"居眠り"},
-{q:"庭の しげみ にマングースがいる",a:"茂み"},
-{q:"金属を ようせつ する",a:"溶接"},
-{q:"次の くうらん に適切な語句を入れなさい",a:"空欄"},
-{q:" りんじん を愛せ",a:"隣人"},
-{q:"危険物取扱者試験の おつしゅ を受ける",a:"乙種"},
-{q:" りゅうれい な文字を書く",a:"流麗"},
-{q:"商品を おろしね で売る",a:"卸値"},
-{q:"夜道に きかい な影を見る",a:"奇怪"},
-{q:"パソコンで えんかく 授業を受ける",a:"遠隔"},
-{q:"異世界に しょうかん される",a:"召喚"},
-{q:"星の破片は なめ らかだった",a:"滑"},
-{q:"電話を取ったら とくしゅ 詐欺だった",a:"特殊"},
-{q:"人気の きっさてん に入る",a:"喫茶店"},
-{q:"手紙の最初に はいけい と書く",a:"拝啓"},
-{q:"日本には ほげい 文化がある",a:"捕鯨"},
-{q:"唇が こ を描く",a:"弧"},
-{q:"寝坊して おおあわて する",a:"大慌て"},
-{q:"海の真ん中にある ことう に渡る",a:"孤島"},
-{q:" こんでんえいねんしざいほう",a:"墾田永年私財法"},
-{q:"危機感が けつじょ している",a:"欠如"},
-{q:"歯車は じく を中心に回転する",a:"軸"},
-{q:"三人寄れば もんじゅ の知恵",a:"文殊"},
-{q:"イベントを しゅさい する",a:"主催"},
-{q:"寮の部屋を せじょう した",a:"施錠"},
-{q:"沖縄は こうしんりょう 栽培の北限だ",a:"香辛料"},
-{q:"お じょう さん、お待ちなさい",a:"嬢"},
-{q:"任務を すいこう する",a:"遂行"},
-{q:"轟の たき を見に行く",a:"滝"},
-{q:"構内に くわ の木が生えている",a:"桑"},
-{q:"攻撃を そし する",a:"阻止"},
-{q:"放課後に そうじ する",a:"掃除"},
-{q:"道路に ちゅうしゃ する",a:"駐車"},
-{q:"間違いを ていせい する",a:"訂正"},
-{q:"北に ほくとしちせい が見える",a:"北斗七星"},
-{q:"読谷は とうき が有名だ",a:"陶器"},
-{q:"中東の ふんそうちたい へ行く",a:"紛争地帯"},
-{q:"琉歌の かひ を建てる",a:"歌碑"},
-{q:" ねんど をこねて作品を作る",a:"粘土"},
-{q:"教員が学校に ふにん する",a:"赴任"}
-]};
+/* ============ データ ============ */
 
-/* ===== アプリロジック ===== */
-let currentQuestions=[],currentIndex=0,showOnlyBookmarked=false;
-let bookmarks=JSON.parse(localStorage.getItem("kokugo_bookmarks")||"{}");
+// ---- Part A ----
+const partA = [
+ {num:1, template:"では直ちに、{ア}の者がそちらに{イ}。", blanks:{
+   'ア':{hint:'自社', note:'「小」は用いない', answer:'弊社'},
+   'イ':{hint:'行きます', note:'「行く」の謙譲語で', answer:'参ります'}
+ }},
+ {num:2, template:"こちらのソファに{ウ}、{エ}。", blanks:{
+   'ウ':{hint:'お座りになって', answer:'おかけ'},
+   'エ':{hint:'お待ちしてください', answer:'お待ちください'}
+ }},
+ {num:3, template:"母が、先生によろしく{オ}と{カ}。", blanks:{
+   'オ':{hint:'伝えてください', answer:'お伝え'},
+   'カ':{hint:'おっしゃっていました', answer:'いらっしゃいました'}
+ }},
+ {num:4, template:"瀬戸様が応接室に{キ}。", blanks:{
+   'キ':{hint:'参られました', answer:'おいで'}
+ }},
+ {num:5, template:"{ク}、ただいま席を外して{ケ}。", blanks:{
+   'ク':{hint:'大谷さんは', note:'取引先に、同僚について話す場面', answer:'大谷'},
+   'ケ':{hint:'おいでです', answer:'おります'}
+ }},
+ {num:6, template:"先方様がそのように{コ}。", blanks:{
+   'コ':{hint:'おっしゃられてます', answer:'おっしゃっています'}
+ }},
+ {num:7, template:"張本様で{サ}。", blanks:{
+   'サ':{hint:'ございますね', note:'相手の名を確認／「よろしい」「間違いない」は使わない', answer:'いらっしゃいますね'}
+ }},
+ {num:8, template:"大坂様は先ほど{シ}。", blanks:{
+   'シ':{hint:'お帰りになられました', answer:'お帰りになりました'}
+ }},
+ {num:9, template:"大変{ス}お値段です。", blanks:{
+   'ス':{hint:'お求めやすい', answer:'お求めになりやすい'}
+ }},
+ {num:10, template:"＊日までに御返事を頂けましたら{セ}。", blanks:{
+   'セ':{hint:'助かります', answer:'幸いです'}
+ }},
+ {num:11, template:"さぞ{ソ}ことと存じます。", blanks:{
+   'ソ':{hint:'お分かりにくかった', answer:'お分かりになりにくかった'}
+ }},
+ {num:12, template:"失礼ですが、{タ}。", blanks:{
+   'タ':{hint:'どなたですか', answer:'どちら様でいらっしゃいますか'}
+ }},
+ {num:13, template:"〇〇につきましては、{チ}の受付で{ツ}ください。", blanks:{
+   'チ':{hint:'あっち', answer:'あちら'},
+   'ツ':{hint:'聞いて（訊いて・尋ねて）', answer:'お聞き'}
+ }},
+ {num:14, template:"（バス等で）お降りの方は{テ}。", blanks:{
+   'テ':{hint:'おりませんか', answer:'いらっしゃいませんか'}
+ }},
+ {num:15, template:"第十三期生{ト}", blanks:{
+   'ト':{hint:'各位殿', answer:'各位'}
+ }},
+ {num:16, template:"次の電車は御乗車{ナ}。", blanks:{
+   'ナ':{hint:'できません', answer:'なれません'}
+ }},
+ {num:17, template:"{ニ}この企画を担当しても{ヌ}。", blanks:{
+   'ニ':{hint:'自分が', answer:'私／私が'},
+   'ヌ':{hint:'いいですか', answer:'よろしいでしょうか'}
+ }},
+ {num:18, template:"どうぞ御検討{ネ}よろしくお願い申し上げます。", blanks:{
+   'ネ':{hint:'なさいますよう', note:'「たまわ（る）」を用いて', answer:'賜り'}
+ }},
+ {num:19, template:"高松{ノ}と{ハ}が、お約束があると{ヒ}。", blanks:{
+   'ノ':{hint:'さん', answer:'様'},
+   'ハ':{hint:'いう人', answer:'おっしゃる方'},
+   'ヒ':{hint:'申されてます', answer:'おっしゃっています'}
+ }}
+];
 
-function initApp(){
-  const mode = modeSelect.value;
-  // 現在のモードのブックマークのみ抽出
-  const modeBookmarks = {};
-  for(const key in bookmarks){
-    if(key.startsWith(mode+"_")) modeBookmarks[key]=bookmarks[key];
+// ---- Part B ----
+const partB = [
+ {num:1, context:'客に対して店員が', template:"ただいまメニューを{ア}。", blanks:{
+   'ア':{hint:'お持ちになります', answer:'お持ちいたします／お持ち致します'}
+ }},
+ {num:2, context:'料理を運び、客に料理を勧める', template:"どうぞごゆっくり{イ}ください。", blanks:{
+   'イ':{hint:'頂いて', answer:'召し上がって／お召し上がり'}
+ }},
+ {num:3, template:"＊年前のあの事件のことは、私もよく{ウ}。", blanks:{
+   'ウ':{hint:'存じ上げてます', answer:'存じております'}
+ }},
+ {num:4, template:"私の{エ}が、ぜひとも先生に{オ}とのことですが……", blanks:{
+   'エ':{hint:'おじいさん', answer:'祖父'},
+   'オ':{hint:'お目にかかりたい', answer:'〇'}
+ }},
+ {num:5, template:"西野様、店内に{カ}サービスカウンターまでお越しください。", blanks:{
+   'カ':{hint:'おりましたら', answer:'いらっしゃいましたら'}
+ }},
+ {num:6, template:"{キ}。", blanks:{
+   'キ':{hint:'とんでもございません', answer:'とんでもないことでございます／ないことでございます'}
+ }},
+ {num:7, template:"この製品につきましては、{ク}の部署では対応{ケ}。", blanks:{
+   'ク':{hint:'僕たち', answer:'私ども'},
+   'ケ':{hint:'できません', answer:'致しかねます'}
+ }},
+ {num:8, context:'帰宅する上司に', template:"{コ}。", blanks:{
+   'コ':{hint:'御苦労様でした', answer:'お疲れ様でした／お疲れ様でございました'}
+ }},
+ {num:9, context:'上司に', template:"部長は、懇親会に{サ}。", blanks:{
+   'サ':{hint:'参加致しますか', answer:'参加されますか／御参加なさいますか'}
+ }},
+ {num:10, template:"こちらは、24時間御利用{シ}。", blanks:{
+   'シ':{hint:'できます', answer:'頂けます／になれます'}
+ }},
+ {num:11, template:"先生の{ス}は {セ}ですか。", blanks:{
+   'ス':{hint:'都合', answer:'御都合'},
+   'セ':{hint:'どう', answer:'いかが'}
+ }},
+ {num:12, template:"お手元の資料を{ソ}ください。", blanks:{
+   'ソ':{hint:'拝見して', answer:'御覧になって／お目にかかって'}
+ }},
+ {num:13, context:'デモンストレーションで', template:"さて今回、皆様に{タ}新製品は……", blanks:{
+   'タ':{hint:'ご覧に入れます', answer:'〇'}
+ }},
+ {num:14, context:'顧客に', template:"{チ}。", blanks:{
+   'チ':{hint:'お分かりいただけましたでしょうか', answer:'御理解頂けましたでしょうか'}
+ }},
+ {num:15, template:"専務のお話、{ツ}{テ}。", blanks:{
+   'ツ':{hint:'かなり', answer:'大変／非常に'},
+   'テ':{hint:'感銘を受けました', answer:'〇'}
+ }},
+ {num:16, context:'ある仕事を振られて', template:"いえそんな、私では{ト}。", blanks:{
+   'ト':{hint:'力不足です', answer:'〇'}
+ }}
+];
+
+// ---- Part C ----
+const partC1 = [
+ {num:1, template:"{ア}、〜に御記入をお願い致します。{イ}、御連絡先をお教え願えますでしょうか。{ウ}、（相手の忙しさに配慮して）よろしくお願い申し上げます。", blanks:{
+   'ア':{hint:'語群より選び漢字に', answer:'お手数ですが'},
+   'イ':{hint:'語群より選び漢字に', answer:'差し支えなければ'},
+   'ウ':{hint:'語群より選び漢字に', answer:'御多忙中恐縮ですが'}
+ }}
+];
+const partC2 = [
+ {num:2, template:"「{エ}、急な会議{オ}、14時からの打ち合わせの時間を変更して{カ}。」", blanks:{
+   'エ':{hint:'目上への詫びの前置き', answer:'大変申し訳ありませんが／申し訳ございませんが'},
+   'オ':{hint:'理由を続ける形で', answer:'が入ってしまいましたので'},
+   'カ':{hint:'依頼の結び', answer:'頂けないでしょうか／頂けませんでしょうか'}
+ }}
+];
+
+/* ============ レンダリング & 採点 ============ */
+const registry = {}; // key -> {inputEl, markEl, revealEl, answer}
+
+function altForms(str){
+  const noParen = str.replace(/[（(][^）)]*[）)]/g,'');
+  const withContent = str.replace(/[（）()]/g,'');
+  return [noParen, withContent, str];
+}
+function normalize(s){
+  return (s||'')
+    .replace(/[\s　]/g,'')
+    .replace(/[。、！？!?・,\.]/g,'')
+    .replace(/[「」『』]/g,'');
+}
+function acceptedSet(answerStr){
+  const alts = answerStr.split(/／|\//).map(s=>s.trim()).filter(Boolean);
+  let set = new Set();
+  alts.forEach(a=>{
+    altForms(a).forEach(v=>set.add(normalize(v)));
+  });
+  if(answerStr.includes('〇')){
+    ['〇','○','まる','ok','OK','正しい','そのまま','適切'].forEach(v=>set.add(normalize(v)));
+  }
+  return set;
+}
+function isCorrect(userVal, answerStr){
+  const u = normalize(userVal);
+  if(!u) return false;
+  const set = acceptedSet(answerStr);
+  return set.has(u);
+}
+
+let blankCounter = 0;
+
+function renderItem(container, item, prefix){
+  const wrap = document.createElement('div');
+  wrap.className = 'item';
+
+  const numEl = document.createElement('div');
+  numEl.className = 'item-num';
+  numEl.textContent = '問 ' + item.num;
+  wrap.appendChild(numEl);
+
+  if(item.context){
+    const ctx = document.createElement('div');
+    ctx.className = 'item-context';
+    ctx.textContent = '〈' + item.context + '〉';
+    wrap.appendChild(ctx);
   }
 
-  currentQuestions = showOnlyBookmarked
-    ? data[mode].filter(q=>modeBookmarks[mode+"_"+q.a])
-    : [...data[mode]];
-    
-  currentIndex=0;
-  updateCard();
-}
+  const sentEl = document.createElement('p');
+  sentEl.className = 'sentence';
 
-function updateCard(){
-  if(!currentQuestions.length){
-    qText.innerText="問題なし";
-    aText.innerText="-";
-    qHint.innerText="";
-    counter.innerText="0 / 0";
-    starBtn.classList.remove("active");
-    return;
+  const parts = item.template.split(/(\{[^}]+\})/g);
+  parts.forEach(p=>{
+    const m = p.match(/^\{([^}]+)\}$/);
+    if(m){
+      const letter = m[1];
+      const b = item.blanks[letter];
+      const key = prefix + '_' + letter + '_' + (blankCounter++);
+
+      const span = document.createElement('span');
+      span.className = 'blank';
+
+      const label = document.createElement('sup');
+      label.className = 'letter-label';
+      label.textContent = letter;
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'blank-input';
+      input.autocomplete = 'off';
+      input.placeholder = b.hint;
+      input.style.width = (b.hint.length * 1.15 + 2) + 'em';
+      input.setAttribute('aria-label', letter + '（元：' + b.hint + '）の解答');
+
+      const mark = document.createElement('span');
+      mark.className = 'mark';
+
+      const reveal = document.createElement('span');
+      reveal.className = 'reveal';
+
+      span.appendChild(label);
+      span.appendChild(input);
+      span.appendChild(mark);
+      span.appendChild(reveal);
+      sentEl.appendChild(span);
+
+      registry[key] = {inputEl: input, markEl: mark, revealEl: reveal, answer: b.answer};
+    } else if(p){
+      sentEl.appendChild(document.createTextNode(p));
+    }
+  });
+  wrap.appendChild(sentEl);
+
+  const notesEntries = Object.entries(item.blanks).filter(([,b]) => b.note);
+  if(notesEntries.length){
+    const hintsEl = document.createElement('div');
+    hintsEl.className = 'hints';
+    notesEntries.forEach(([letter,b])=>{
+      const h = document.createElement('span');
+      h.className = 'hint-chip';
+      h.innerHTML = '<b>' + letter + '</b> <i>' + b.note + '</i>';
+      hintsEl.appendChild(h);
+    });
+    wrap.appendChild(hintsEl);
   }
-  card.classList.remove("is-flipped");
-  const q=currentQuestions[currentIndex];
-  const mode=modeSelect.value;
-  qText.innerText=q.q;
-  qHint.innerText=q.h||"";
-  aText.innerText=q.a;
-  counter.innerText=`${currentIndex+1} / ${currentQuestions.length}`;
 
-  const key=mode+"_"+q.a;
-  starBtn.classList.toggle("active",!!bookmarks[key]);
+  container.appendChild(wrap);
 }
 
-function flipCard(){ card.classList.toggle("is-flipped"); }
-
-function prevCard(e){ e.stopPropagation(); if(currentIndex>0){currentIndex--;updateCard();} }
-function nextCard(e){ e.stopPropagation(); if(currentIndex<currentQuestions.length-1){currentIndex++;updateCard();} }
-
-function toggleBookmark(e){
-  e.stopPropagation();
-  const mode=modeSelect.value;
-  const q=currentQuestions[currentIndex];
-  const key=mode+"_"+q.a;
-  if(bookmarks[key]) delete bookmarks[key];
-  else bookmarks[key]=true;
-  localStorage.setItem("kokugo_bookmarks",JSON.stringify(bookmarks));
-  starBtn.classList.toggle("active");
+function renderAll(list, containerId, prefix){
+  const c = document.getElementById(containerId);
+  list.forEach(item => renderItem(c, item, prefix));
 }
 
-function toggleOnlyBookmarked(){
-  showOnlyBookmarked=!showOnlyBookmarked;
-  filterBtnText.innerText=showOnlyBookmarked?"全て表示":"ブックマークのみを表示";
-  initApp();
+renderAll(partA, 'containerA', 'A');
+renderAll(partB, 'containerB', 'B');
+renderAll(partC1, 'containerC1', 'C1');
+renderAll(partC2, 'containerC2', 'C2');
+
+document.getElementById('scoreTotal').textContent = Object.keys(registry).length;
+
+function gradeAll(){
+  let correct = 0;
+  Object.values(registry).forEach(entry=>{
+    const val = entry.inputEl.value;
+    const ok = isCorrect(val, entry.answer);
+    entry.inputEl.classList.remove('correct','incorrect');
+    entry.markEl.classList.remove('correct','incorrect');
+    if(ok){
+      correct++;
+      entry.inputEl.classList.add('correct');
+      entry.markEl.classList.add('correct');
+      entry.revealEl.classList.remove('show');
+      entry.revealEl.textContent = '';
+    } else {
+      entry.inputEl.classList.add('incorrect');
+      entry.markEl.classList.add('incorrect');
+      entry.revealEl.textContent = '→ 正解：' + entry.answer.replace(/／/g,' ／ ');
+      entry.revealEl.classList.add('show');
+    }
+  });
+  document.getElementById('scoreDisplay').textContent = correct;
 }
 
-/* ===== スワイプ対応（スマホ） ===== */
-let startX=null;
-cardContainer.addEventListener("touchstart",e=>{startX=e.touches[0].clientX;});
-cardContainer.addEventListener("touchend",e=>{
-  if(startX===null) return;
-  const endX=e.changedTouches[0].clientX;
-  const diff=endX-startX;
-  if(diff>50) prevCard(new Event("click"));
-  else if(diff<-50) nextCard(new Event("click"));
-  startX=null;
-});
+function resetAll(){
+  Object.values(registry).forEach(entry=>{
+    entry.inputEl.value = '';
+    entry.inputEl.classList.remove('correct','incorrect');
+    entry.markEl.classList.remove('correct','incorrect');
+    entry.revealEl.classList.remove('show');
+    entry.revealEl.textContent = '';
+  });
+  document.getElementById('scoreDisplay').textContent = '0';
+}
 
-initApp();
+document.getElementById('gradeAllBtn').addEventListener('click', gradeAll);
+document.getElementById('resetBtn').addEventListener('click', resetAll);
 </script>
 </body>
 </html>
